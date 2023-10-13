@@ -5,68 +5,41 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+    public static final String QUEUE = "rabbit_mq_queue";
+    public static final String EXCHANGE = "rabbit_mq_exchange";
+    public static final String ROUTING_KEY = "rabbit_mq_r_key";
 
-    @Value("${rabbitmq.queue.name}")
-    private String queue;
-
-    @Value("${rabbitmq.queue.json.name}")
-    private String jsonQueue;
-
-    @Value("${rabbitmq.exchange.name}")
-    private String exchange;
-
-    @Value("${rabbitmq.routing.key}")
-    private String routingKey;
-
-    @Value("${rabbitmq.routing.json.key}")
-    private String routingJsonKey;
-
-    // spring bean for core (Store json message)
     @Bean
     public Queue queue(){
-        return new Queue(queue);
+        return new Queue(QUEUE);
     }
 
     @Bean
-    public Queue jsonQueue(){
-        return new Queue(jsonQueue);
+    public DirectExchange directExchange(){
+        return new DirectExchange(EXCHANGE);
+    }
+    @Bean
+    public Binding binding(Queue queue, DirectExchange directExchange){
+        return  BindingBuilder
+                .bind(queue)
+                .to(directExchange)
+                .with(ROUTING_KEY);
     }
 
     @Bean
-    public TopicExchange exchange(){
-        return new TopicExchange(exchange);
-    }
-
-    @Bean
-    public Binding binding(){
-        return BindingBuilder
-                .bind(queue())
-                .to(exchange())
-                .with(routingKey);
-    }
-
-    @Bean
-    public Binding jsonBinding(){
-        return BindingBuilder
-                .bind(jsonQueue())
-                .to(exchange())
-                .with(routingJsonKey);
-    }
-
-    public MessageConverter converter(){
+    public MessageConverter messageConverter(){
         return new Jackson2JsonMessageConverter();
     }
 
-    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory){
+    @Bean
+    public AmqpTemplate getTemplate(ConnectionFactory connectionFactory){
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(converter());
-
+        rabbitTemplate.setMessageConverter(messageConverter());
         return rabbitTemplate;
     }
 }

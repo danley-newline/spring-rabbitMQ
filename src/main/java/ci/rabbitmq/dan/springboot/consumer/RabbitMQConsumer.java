@@ -1,16 +1,14 @@
 package ci.rabbitmq.dan.springboot.consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ci.rabbitmq.dan.springboot.config.RabbitMQConfig;
+import ci.rabbitmq.dan.springboot.entity.OrderDTO;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class RabbitMQConsumer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQConsumer.class);
-
-    @RabbitListener(queues = "${rabbitmq.queue.name}")
-    public void consume(String message){
-        LOGGER.info(String.format("Received message -> %s", message));
+    @RabbitListener(queues = RabbitMQConfig.QUEUE)
+    public void consume(OrderDTO orderDTO){
+        System.out.println("Consumer is able to get the message "+ orderDTO);
     }
 }
